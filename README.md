@@ -142,8 +142,8 @@ pip install -r requirements.txt
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/emredogan-cloud/AEGIS_TOOL
-cd AEGIS_TOOL
+git clone https://github.com/emredogan-cloud/aegis.git
+cd aegis
 
 
 Set up a virtual environment:
