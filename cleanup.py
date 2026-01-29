@@ -7,10 +7,10 @@ from services.dynamodb_service import delete_dynamodb_table
 from services.s3_service import delete_bucket
 from services.kms_service import delete_kms_key_by_alias
 
-logger = get_logger("cleanup")
+logger = get_logger("cleanup", 'INFO')
 
 def cleanup():
-    logger.info("🔥 Aegis Infrastructure Cleanup Started")
+    logger.info("Aegis Infrastructure Cleanup Started")
 
     delete_ec2_resources(
         EC2_KEY_PAIR_NAME,
@@ -29,7 +29,7 @@ def cleanup():
 
     delete_kms_key_by_alias(KMS_ALIAS_NAME)
 
-    logger.info("✅ All resources cleaned successfully")
+    logger.info("All resources cleaned successfully")
 
 
 if __name__ == "__main__":
