@@ -1,13 +1,14 @@
 from utils.logger import get_logger
-from clients.dynamodb_client import get_dynamodb_client
+from utils.session import AWSSessionManager
 from botocore.exceptions import ClientError
 from config import DYNAMODB_BILLING_MODE
 from utils.waiters import wait_for_dynamodb_active
 
-logger = get_logger("dynamodb_service")
-
+logger = get_logger("dynamodb_service" , 'INFO')
+manager = AWSSessionManager.get_instance()
+region='us-east-1'
 def create_audit_table(table_name):
-    dynamodb = get_dynamodb_client()
+    dynamodb = manager.get_client('dynamodb', region=region)
 
     try:
         logger.info(f"DynamoDB Table Creating | {table_name}")
@@ -55,11 +56,13 @@ def create_audit_table(table_name):
         
 
 def delete_dynamodb_table(table_name):
-    dynamodb = get_dynamodb_client()
+    dynamodb = manager.get_client('dynamodb',region=region)
 
     try:
         dynamodb.delete_table(TableName=table_name)
         logger.info(f"DynamoDB table deleted: {table_name}")
-    except ClientError:
-        pass
+    except ClientError as e:
+        error = e.response["Error"]["Code"]
+        messages = e.response["Error"]["Message"]
+        logger.error(f'AWS ERROR: {error} | {messages}')
 

@@ -1,14 +1,16 @@
 from botocore.exceptions import ClientError
 from utils.logger import get_logger
-from clients.kms_client import get_kms_client
+from utils.session import AWSSessionManager
 from config import KMS_ALIAS_NAME
 from utils.waiters import wait_for_kms_enabled
 
-logger = get_logger("kms_service")
-
+logger = get_logger("kms_service" , 'INFO')
+region = 'us-east-1'
+manager = AWSSessionManager.get_instance()
+kms_client = manager.get_client('kms' ,region=region)
 
 def get_key_by_alias(alias_name: str):
-    kms = get_kms_client()
+    kms = kms_client
 
     try:
         response = kms.describe_key(KeyId=alias_name)
@@ -27,7 +29,7 @@ def get_key_by_alias(alias_name: str):
 
 
 def create_master_key_with_alias(alias_name: str):
-    kms = get_kms_client()
+    kms = kms_client
 
     logger.info("KMS | Creating new master key")
 
@@ -68,7 +70,7 @@ def create_master_key():
 
 
 def delete_kms_key_by_alias(alias_name):
-    kms = get_kms_client()
+    kms = kms_client
 
     try:
         meta = kms.describe_key(KeyId=alias_name)["KeyMetadata"]

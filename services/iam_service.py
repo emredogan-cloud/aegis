@@ -2,14 +2,17 @@ import time
 import json
 from botocore.exceptions import ClientError
 from utils.logger import get_logger
-from clients.iam_client import get_iam_client
+from utils.session import AWSSessionManager
 from data.policies import EC2_TRUST_POLICY, build_permission_policy
 
-logger = get_logger("iam_service")
+logger = get_logger("iam_service" , 'INFO')
+region = 'us-east-1'
+manager = AWSSessionManager.get_instance()
+iam_client = manager.get_client('iam' , region=region)
 
 
 def create_role(role_name: str) -> bool:
-    iam = get_iam_client()
+    iam = iam_client
 
     try:
         iam.create_role(
@@ -31,7 +34,7 @@ def create_role(role_name: str) -> bool:
 
 
 def put_inline_policy(role_name: str, policy_name: str, policy_doc: dict) -> bool:
-    iam = get_iam_client()
+    iam = iam_client
 
     try:
         iam.put_role_policy(
@@ -49,7 +52,7 @@ def put_inline_policy(role_name: str, policy_name: str, policy_doc: dict) -> boo
 
 
 def ensure_instance_profile(profile_name: str) -> bool:
-    iam = get_iam_client()
+    iam = iam_client
 
     try:
         iam.create_instance_profile(InstanceProfileName=profile_name)
@@ -66,7 +69,7 @@ def ensure_instance_profile(profile_name: str) -> bool:
 
 
 def add_role_to_profile(profile_name: str, role_name: str) -> bool:
-    iam = get_iam_client()
+    iam = iam_client
 
     try:
         iam.add_role_to_instance_profile(
@@ -114,29 +117,33 @@ def setup_iam_infrastructure(
 
 
 def delete_iam_resources(role_name, profile_name, policy_name):
-    iam = get_iam_client()
+    iam = iam_client
 
     try:
         iam.remove_role_from_instance_profile(
             InstanceProfileName=profile_name,
             RoleName=role_name
         )
-    except ClientError:
-        pass
+    except ClientError as e:
+        error = e.response["Error"]["Code"]
+        logger.error(f'İAM ERROR: {error}')
 
     try:
         iam.delete_instance_profile(InstanceProfileName=profile_name)
-    except ClientError:
-        pass
+    except ClientError as e:
+        error = e.response["Error"]["Code"]
+        logger.error(f'İAM ERROR: {error}')
 
     try:
         iam.delete_role_policy(RoleName=role_name, PolicyName=policy_name)
-    except ClientError:
-        pass
+    except ClientError as e:
+        error = e.response["Error"]["Code"]
+        logger.error(f'İAM ERROR: {error}')
 
     try:
         iam.delete_role(RoleName=role_name)
-    except ClientError:
-        pass
+    except ClientError as e:
+        error = e.response["Error"]["Code"]
+        logger.error(f'İAM ERROR: {error}')
 
     logger.info("IAM resources deleted")

@@ -1,16 +1,17 @@
 from botocore.exceptions import ClientError
-from clients.ec2_client import get_ec2_client
-from clients.ssm_client import get_ssm_client
+from utils.session import AWSSessionManager
 from utils.logger import get_logger
 import os
 from utils.waiters import wait_for_ec2_running , wait_for_ec2_terminated
-logger = get_logger("ec2_service")
 
+
+logger = get_logger("ec2_service", 'INFO')
+manager = AWSSessionManager.get_instance()
 INSTANCE_TAG_NAME = "Aegis-Worker"
-
+region = 'us-east-1'
 
 def find_existing_instance():
-    ec2 = get_ec2_client()
+    ec2 = manager.get_client('ec2' ,region=region)
 
     response = ec2.describe_instances(
         Filters=[
@@ -27,7 +28,7 @@ def find_existing_instance():
 
 
 def create_key_pair(key_name: str) -> str:
-    ec2 = get_ec2_client()
+    ec2 = manager.get_client('ec2' ,region=region)
 
     try:
         response = ec2.create_key_pair(KeyName=key_name)
@@ -48,7 +49,7 @@ def create_key_pair(key_name: str) -> str:
 
 
 def get_latest_ami() -> str:
-    ssm = get_ssm_client()
+    ssm = manager.get_client('ssm' ,region=region)
     return ssm.get_parameter(
         Name="/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
         WithDecryption=False
@@ -56,7 +57,7 @@ def get_latest_ami() -> str:
 
 
 def launch_instance(ami_id, key_name, sg_id, profile_name) -> str:
-    ec2 = get_ec2_client()
+    ec2 = manager.get_client('ec2' ,region=region)
 
     existing = find_existing_instance()
 
@@ -118,7 +119,7 @@ echo "Aegis Setup Complete" > /home/ec2-user/setup_log.txt
 
 
 def delete_ec2_resources(key_name, group_name):
-    ec2 = get_ec2_client()
+    ec2 = manager.get_client('ec2' ,region=region)
 
     instances = ec2.describe_instances(
         Filters=[{"Name": "tag:Name", "Values": [INSTANCE_TAG_NAME]}]
@@ -145,5 +146,7 @@ def delete_ec2_resources(key_name, group_name):
     try:
         ec2.delete_key_pair(KeyName=key_name)
         logger.info(f"Deleted KeyPair: {key_name}")
-    except ClientError:
-        pass
+    except ClientError as e:
+        error = e.response["Error"]["Code"]
+        messages = e.response["Error"]["Message"]
+        logger.error(f'AWS ERROR: {error} | {messages}')

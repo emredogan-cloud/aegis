@@ -1,12 +1,16 @@
 from botocore.exceptions import ClientError
 from utils.logger import get_logger
 from config import AWS_REGION
-from clients.s3_client import get_s3_client
+from utils.session import AWSSessionManager
 
-logger = get_logger("s3_service")
+region = 'us-east-1'
+
+manager = AWSSessionManager.get_instance()
+s3_client = manager.get_client('s3', region=region)
+logger = get_logger("s3_service", 'INFO')
 
 def create_bucket(bucket_name):
-    s3 = get_s3_client()
+    s3 = s3_client
 
     try:
         if AWS_REGION == "us-east-1":
@@ -31,7 +35,7 @@ def create_bucket(bucket_name):
 
 
 def delete_bucket(bucket_name):
-    s3 = get_s3_client()
+    s3 = s3_client
 
     try:
         objs = s3.list_objects_v2(Bucket=bucket_name)
@@ -43,5 +47,8 @@ def delete_bucket(bucket_name):
 
         s3.delete_bucket(Bucket=bucket_name)
         logger.info(f"S3 bucket deleted: {bucket_name}")
-    except ClientError:
-        pass
+    except ClientError as e:
+        error = e.response["Error"]["Code"]
+        messages = e.response["Error"]["Message"]
+        logger.error(f'AWS ERROR: {error} | {messages}')
+        
