@@ -1,6 +1,6 @@
 # Aegis AWS Infrastructure Automation Tool
 
-![CI Status](https://github.com/emredogan-cloud/aegis/actions/workflows/ci.yml/badge.svg)
+[![Aegis CI](https://github.com/emredogan-cloud/aegis/actions/workflows/main.yaml/badge.svg)](https://github.com/emredogan-cloud/aegis/actions/workflows/main.yaml)
 
 Aegis is a production-grade AWS infrastructure automation tool written in Python using Boto3.  
 It provisions and destroys AWS resources in an idempotent, secure, and modular way.
