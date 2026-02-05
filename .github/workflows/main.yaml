@@ -1,4 +1,4 @@
-name: Super Python CI
+name: Aegis CI
 
 on: [push, pull_request]
 
