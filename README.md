@@ -4,7 +4,7 @@
 
 ## Architecture Diagram
 
-![Architecture](docs/aegis.png)
+<img src="docs/aegis.png" alt="Architecture Diagram" width="600">
 
 Aegis is a production-grade AWS infrastructure automation tool written in Python using Boto3.  
 It provisions and destroys AWS resources in an idempotent, secure, and modular way.
