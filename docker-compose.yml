@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  aegis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aegis-provisioner
+    
+    # AWS credentials
+    environment:
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    
+    # Mount AWS credentials from host
+    volumes:
+      - ~/.aws:/home/aegis/.aws:ro
+    
+    # Override command for provision
+    command: python main.py
+    
+    # Network
+    networks:
+      - aegis-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+networks:
+  aegis-network:
+    driver: bridge
